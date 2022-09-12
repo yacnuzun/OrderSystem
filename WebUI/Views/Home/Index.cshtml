@@ -1,0 +1,281 @@
+﻿@{
+    ViewData["Title"] = "Home Page";
+}
+
+<div class="container text-center ">
+    <!-- Stack the columns on mobile by making one full-width and the other half-width -->
+    <div class="row">
+        <div class="col-md-6">
+            <label>Sipariş Tarihini Giriniz</label>
+            <input type="datetime-local" />
+        </div>
+        <div class="col-md-6">
+            For Company
+            <select name="Company" id="company">
+            </select>
+        </div>
+        <div class="container text-center">
+            <div class="col-md-3 align-self-end">
+                <input type="button" class="btn btn-primary" id="addCompany" value="Ürün Seçimi" />
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<div class="container text-center " id="productDiv" style="display:none;">
+    <div class="row">
+        <div class="col">
+            <form>
+                <div class="mb-3">
+                    <label class="form-label">Ürün</label>
+                    <select class="form-control" name="Product" id="product">
+                    </select>
+                </div>
+            </form>
+        </div>
+        <div class="col">
+            <div class="mb-3">
+                <form>
+                    <input type="hidden" id="productAmount" />
+                    <label class="form-label">Adet</label>
+                    <input type="text" class="form-control" id="piece">
+                </form>
+            </div>
+        </div>
+        <div class="col">
+            <div class="mb-3">
+                <form>
+                    <fieldset disabled>
+                        <label class="form-label">Tutar</label>
+                        <input type="text" class="form-control" id="amount">
+                    </fieldset>
+                </form>
+            </div>
+            <button class="btn btn-primary" id="productAdd">Ekle</button>
+        </div>
+    </div>
+</div>
+
+<div class="container text-center " id="productTable" style="display:none;">
+    <table class="table table-light table-striped">
+        <thead>
+            <tr>
+                <th scope="col">#</th>
+                <th scope="col">Ürün</th>
+                <th scope="col">Adet</th>
+                <th scope="col">Tutar</th>
+            </tr>
+        </thead>
+        <tbody id="innerTable">
+        </tbody>
+    </table>
+    <span>Toplam Tutar:<label id="totalAmount"  style="display:none;"></label></span><br />
+    <button class="btn btn-primary" id="addOrder">Kaydet</button>
+</div>
+
+<script type="text/javascript">
+
+    //Şirketler için
+    $(document).ready(function () {
+        getDatasForCompany();
+    })
+
+    //Şirketleri Getirdik.
+    function getDatasForCompany() {
+        $.ajax({
+            contentType: "application/json; charset=utf-8",
+            url: "http://localhost:5047/api/Companies/getall",
+            type: "get",
+            crossDomain: true,
+            dataType: "json",
+            success: function (response) {
+                console.log(response);
+                getCompanies(response)
+
+            }
+        })
+    }
+
+    //Şirketleri Seçtik.
+    function getCompanies(data) {
+        $.each(data, function (key, value) {
+
+            var opt = document.createElement("option");
+            opt.innerHTML = value.companyName;
+            opt.setAttribute("id", value.id);
+            $("#company").append(opt);
+        }
+        )
+    }
+
+    //Ürünler için
+
+    $("#addCompany").click(function () {
+        $('#productDiv').css("display", "block");
+        getDatasForProduct();
+
+    });
+
+    
+    //Bütün Ürünleri çekti.
+    function getDatasForProduct() {
+        $.ajax({
+            contentType: "application/json; charset=utf-8",
+            url: "http://localhost:5047/api/Products/getall",
+            type: "get",
+            crossDomain: true,
+            dataType: "json",
+            success: function (response) {
+                getProducts(response);
+            }
+
+        });
+    }
+    
+    //Tek ürün çekti.
+    function getDataForProduct(id){
+        $.ajax({
+            contentType: "application/json; charset=utf-8",
+            url: "http://localhost:5047/api/Products/get?id="+id,
+            type: "get",
+            crossDomain: true,
+            dataType: "json",
+            success: function (response) {
+                getProduct(response);
+            }
+
+        });
+    }
+
+    //Tutarı yazdı.
+    $("#piece").change(function(){
+        var piece = $(this).val();
+        var amount=$("#productAmount").val();
+        $("#amount").val(piece * amount);
+    })
+
+    //Ürün idsini gönderdi.
+    $("#product").change(function(){
+        getDataForProduct($('option:selected', this).attr('id'));
+        $("#piece").val("");
+        $("#amount").val("");
+    })
+
+    //Ürünleri Selecte yazdırdı.
+    function getProducts(data) {
+        var optDefault = document.createElement("option");
+        optDefault.innerHTML="Ürün seçiniz...";
+        $("#product").append(optDefault);
+        $.each(data, function (key, value) {
+
+            var opt = document.createElement("option");
+            opt.innerHTML = value.name;
+            opt.setAttribute("id", value.id);
+            $("#product").append(opt);
+            
+
+        })
+    }
+
+    //Ürün fiyatını aldı.
+    function getProduct(data) {
+        $("#productAmount").val(data.amount);
+    }
+
+
+
+    //Tabloya Veri Çekme
+    var item = 0;
+    var orderDetail=new Array();
+    var tur = 0;
+    var totalAmount = 0;
+    var order={
+        companyId:"",
+        totalAmount:""
+    }
+    var orderProduct{
+        productId:"",
+        orderId:""
+    }
+    var orderId;
+    
+    $("#productAdd").click(
+        function () {
+            item = item + 1;
+            $("#productTable").css("display", "block");
+            tableEnter();
+        }
+
+
+    )
+    function tableEnter() {
+        var tr = document.createElement("tr");
+        var tdNo = document.createElement("td");
+        tdNo.innerHTML = item;
+        var tdProduct = document.createElement("td");
+        tdProduct.innerHTML = $("#product").val();
+        var tdPiece = document.createElement("td");
+        tdPiece.innerHTML = $("#piece").val();
+        var tdAmount = document.createElement("td");
+        tdAmount.innerHTML = $("#amount").val()
+        tr.appendChild(tdNo);
+        tr.appendChild(tdProduct);
+        tr.appendChild(tdPiece);
+        tr.appendChild(tdAmount);
+        $("#innerTable").append(tr);
+        totalAmount=parseInt(totalAmount)+parseInt($("#amount").val());
+        $("#totalAmount").html(totalAmount.toString());
+        $("#totalAmount").css("display","inline");
+        companyId = $('option:selected', "#company").attr('id');
+        productId = $('option:selected', "#product").attr('id');
+        order["totalAmount"] = totalAmount;
+        order["companyId"] = companyId;
+        orderDetail[tur]=new Array( companyId,productId , totalAmount);
+        tur=tur+1;
+    }
+
+
+
+    $("#addOrder").click(function(){
+        addOrder(order);
+        
+        //for (i = 0; i < orderDetail.length; i++) {
+        //    addOrderProducts()
+        //}
+    })
+
+    function addOrder(data){
+        $.ajax({
+            contentType: "application/json; charset=utf-8",
+            url: "http://localhost:5047/api/Orders/add",
+            type: "post",
+            crossDomain: true,
+            data:JSON.stringify(data),
+            dataType: "json",
+            success: function (response) {
+                getOrder(response);
+            }
+
+        });
+    } 
+    function addOrderProducts(data) {
+        $.ajax({
+            contentType: "application/json; charset=utf-8",
+            url: "http://localhost:5047/api/OrderProducts/add",
+            type: "post",
+            crossDomain: true,
+            data: JSON.stringify(data),
+            dataType: "json",
+            success: function (response) {
+                console.log(response);
+            }
+
+        });
+    }
+
+    function getOrder(data) {
+        orderId=data.id
+    }
+</script>
+
