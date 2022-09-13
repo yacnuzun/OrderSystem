@@ -12,5 +12,7 @@ namespace Entities.Concrete
         public int Id { get; set; }
         public int TotalAmount { get; set; }
         public int CompanyId { get; set; }
+        public DateTime Date { get; set; }
     }
+    
 }

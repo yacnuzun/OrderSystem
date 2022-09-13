@@ -1,0 +1,219 @@
+﻿
+@{
+    ViewData["Title"] = "Index";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h1>Product</h1>
+
+
+
+<div class="container text-center">
+    <div class="row align-items-start">
+        <--//Sol kısım-->
+        <div class="col">
+            <table class="table table-secondary table-striped">
+                <thead>
+                    <tr>
+                        <th scope="col">#</th>
+                        <th scope="col">Ürün</th>
+                        <th scope="col">Kod</th>
+                        <th scope="col">Tutar</th>
+                        <th scope="col">İşlem</th>
+                    </tr>
+                </thead>
+                <tbody id="productTable">
+                    
+                </tbody>
+            </table>
+                <button type="button" id="addBtn" class="btn btn-success"><i class="fa-solid fa-square-plus"></i> Ekle</button>
+            <div class="row align-items-start " id="productList" ">
+                <span class="bg-secondary text-white bg-opacity-50" style="border-style: solid; border-radius: 10px;">
+                    <div class="container text-center">
+                        <div class="row align-items-start">
+                            <label>Ürün İstatistikleri</label>
+                            <div class="col">
+                                <label>Ürün</label>
+                                <form>
+                                    
+                                </form>
+                            </div>
+                            <div class="col">
+                                <label>Toplam Satış</label>
+                            </div>
+                        </div>
+                    </div>
+                </span>
+            </div>
+        </div>
+        <--//Sağ Kısım-->
+        <div class="col">
+            <div class="bg-success text-secondary bg-opacity-50" id="productAdd" style="border-radius: 10px;border-width: 5px; border:green;border-style: solid; display:none;">
+                <div class="mb-3 position-relative">
+                        <label class="form-label">Ürün</label>
+                    <input type="text" class="w-50 position-absolute form-control" id="productAddData" style="top:60%; right: 25%; height: 30px;">
+                    </div>
+                <div class="mb-3 position-relative">
+                        <label class="form-label">Kod</label>
+                    <input type="text" class="w-50 position-absolute form-control" id="codeAddData" style="top:60%; right: 25%; height: 30px;">
+                    </div>
+                <div class="mb-3 position-relative">
+                        <label class="form-label">Tutar</label>
+                    <input type="text" class="w-50 position-absolute form-control" id="amountAddData" style="top:60%; right: 25%; height: 30px;">
+                    </div>
+                    <button type="submit" id="addDivBtn" class="btn btn-success"><i class="fa-solid fa-square-plus"></i> Kaydet</button>
+            </div>
+            <div class="bg-warning text-secondary bg-opacity-50" id="productEdit" style="border-radius: 10px;border-width: 5px; border:yellow;border-style: solid; display:none;">
+                <div class="mb-3 position-relative">
+                    <label class="form-label">Ürün</label>
+                    <input type="text" class="w-50 position-absolute form-control" id="productEditData" style="top:60%; right: 25%; height: 30px;">
+                </div>
+                <div class="mb-3 position-relative">
+                    <label class="form-label">Kod</label>
+                    <input type="text" class="w-50 position-absolute form-control" id="codeEditData" style="top:60%; right: 25%; height: 30px;">
+                </div>
+                <div class="mb-3 position-relative">
+                    <label class="form-label">Tutar</label>
+                    <input type="text" class="w-50 position-absolute form-control" id="amountEditData" style="top:60%; right: 25%; height: 30px;">
+                </div>
+                <input type="hidden" id="productEditId" />
+                <button id="editDivBtn" type="submit" class="btn btn-warning"><i class="fa-solid fa-square-plus"></i> Düzenle</button>
+            </div>
+        </div>
+    </div>
+</div>
+<script type="text/javascript">
+    var no = 0;
+    var productTable = document.getElementById("productTable");
+    $(document).ready(function(){
+        getDatasForProducts();
+    })
+
+    //Ürünleri çekti.
+    function getDatasForProducts() {
+        $.ajax({
+            contentType: "application/json; charset=utf-8",
+            url: "http://localhost:5047/api/Products/getall",
+            type: "get",
+            crossDomain: true,
+            dataType: "json",
+            success: function (response) {
+                console.log(response);
+                getProducts(response);
+
+            }
+        })
+    }
+
+    //Ürünleri bastı..
+    function getProducts(data){
+        $.each(data, function (key, value) {
+            no = no + 1;
+            productTable.innerHTML += "<tr>" +
+                "<td>"+no+"</td>" +
+                "<td>"+value.name+"</td>" +
+                "<td> " + value.productCode + "</td>" +
+                "<td>"+value.amount+"</td>" +
+                "<td><button type=\"button\" onclick=\"openEditDiv( " +value.id +")\" class=\"btn btn-warning\" id= " +value.id +"> <i class=\"fa-solid fa-pen-to-square\"></i>Düzenle</button>" +
+                "<button type=\"button\" onclick=\"deleteFunction( " + value.id + ")\"  class=\"btn btn-danger\" id=" + value.id + "> <i class=\"fa-solid fa-trash-can\"> </i>Sil</button> </td>" +
+                "</tr>";
+        })
+    }
+
+
+    //Ürünü Çekti.
+    function getProduct(data){
+        $.ajax({
+            contentType: "application/json; charset=utf-8",
+            url: "http://localhost:5047/api/Products/get?id="+JSON.stringify(data),
+            type: "get",
+            crossDomain: true,
+            dataType: "json",
+            success: function (response) {
+                console.log(response);
+                $("#productEditData").val(response.name);
+                $("#codeEditData").val(response.productCode);
+                $("#amountEditData").val(response.amount);
+                $("#productEditId").val(response.id);
+            }
+        })
+    }
+
+    //Divi açtı.
+    $("#addBtn").click(function(){
+        $("#productAdd").css("display","block");
+    })
+
+    //Divi açtı.
+    function openEditDiv(data) {
+        getProduct(data);
+        $("#productEdit").css("display", "block");
+    }
+
+    //Güncelleme Yaptı.
+    $("#editDivBtn").click(function(){
+        var data={
+            Id:$("#productEditId").val(),
+            Name:$("#productEditData").val(),
+            ProductCode:$("#codeEditData").val(),
+            Amount:$("#amountEditData").val()
+        }
+        $.ajax({
+            contentType: "application/json; charset=utf-8",
+            url: "http://localhost:5047/api/Products/update",
+            type: "post",
+            crossDomain: true,
+            data:JSON.stringify(data),
+            dataType: "json",
+            success: function (response) {
+                console.log(response);
+                $("#productEdit").css("display","none");
+                window.location.reload();
+            }
+        })}
+    )
+
+
+    //Ekleme İşlemini yaptı.
+    $("#addDivBtn").click(function () {
+        var data = {
+            Name: $("#productAddData").val(),
+            ProductCode: $("#codeAddData").val(),
+            Amount: $("#amountAddData").val()
+        }
+        $.ajax({
+            contentType: "application/json; charset=utf-8",
+            url: "http://localhost:5047/api/Products/add",
+            type: "post",
+            crossDomain: true,
+            data: JSON.stringify(data),
+            dataType: "json",
+            success: function (response) {
+                console.log(response);
+                $("#productEdit").css("display", "none");
+                window.location.reload();
+            }
+        })
+    }
+    )
+
+
+    //Silme yaptı.
+    function deleteFunction(data) {
+        
+        $.ajax({
+            contentType: "application/json; charset=utf-8",
+            url: "http://localhost:5047/api/Products/delete?id="+JSON.stringify(data),
+            type: "get",
+            crossDomain: true,
+            dataType: "json",
+            success: function (response) {
+                console.log(response);
+                window.location.reload();
+            }
+        })
+    }
+    
+
+
+</script>

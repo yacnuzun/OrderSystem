@@ -1,6 +1,8 @@
 ﻿using Business.Abstract;
 using Entities.Concrete;
 using Microsoft.AspNetCore.Mvc;
+using System.Globalization;
+using WebAPI.Model;
 
 namespace WebAPI.Controllers
 {
@@ -33,13 +35,13 @@ namespace WebAPI.Controllers
         }
         [HttpPost("add")]
         public IActionResult Add(Order order)
-        {
+        {            
             var result = _orderService.Add(order);
             if (!result.Success)
             {
                 return BadRequest(result.Message);
             }
-            return Ok(result.Message);
+            return Ok(result.Data);
         }
 
         [HttpPost("update")]
@@ -63,4 +65,5 @@ namespace WebAPI.Controllers
             return Ok(result.Success);
         }
     }
+
 }

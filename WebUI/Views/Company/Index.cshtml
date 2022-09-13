@@ -1,0 +1,134 @@
+﻿
+@{
+    ViewData["Title"] = "Index";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h1>Company</h1>
+
+<div class="container text-center">
+    <div class="row align-items-start">
+        <--//Sol Kısım-->
+        <div class="col">
+            <table class="table table-secondary table-striped">
+                <thead>
+                    <tr>
+                        <th scope="col">#</th>
+                        <th scope="col">Şirket</th>
+                        <th scope="col">İşlem</th>
+                    </tr>
+                </thead>
+                <tbody id="productTable">
+                </tbody>
+            </table>
+            <button type="button" id="companyaddBtn" class="btn btn-success"><i class="fa-solid fa-square-plus"></i> Ekle</button>
+            <div class="row align-items-start " id="productList" ">
+                <span class="bg-secondary text-white bg-opacity-50" style="border-style: solid; border-radius: 10px;">
+                    <div class="container text-center">
+                        <div class="row align-items-start">
+                            <label>Ürün İstatistikleri</label>
+                            <div class="col">
+                                <label>Ürün</label>
+                                <form>
+                                </form>
+                            </div>
+                            <div class="col">
+                                <label>Toplam Satış</label>
+                            </div>
+                        </div>
+                    </div>
+                </span>
+            </div>
+        </div>
+            
+        
+        <--//Sağ Kısım-->
+        <div class="col">
+                    <div class="bg-success text-secondary bg-opacity-50" id="companyAdd" style="border-radius: 10px;border-width: 5px; border:green;border-style: solid; display:none;">
+                        <div class="mb-3 position-relative">
+                            <label class="form-label">Şirket</label>
+                            <input type="text" class="w-50 position-absolute form-control" id="companyAddData" style="top:60%; right: 25%; height: 30px;">
+                        </div>
+                        <button type="submit" id="companyAddDivBtn" class="btn btn-success"><i class="fa-solid fa-square-plus"></i> Kaydet</button>
+                    </div>
+                    <div class="bg-warning text-secondary bg-opacity-50" id="companyEdit" style="border-radius: 10px;border-width: 5px; border:yellow;border-style: solid; display:none;">
+                        <div class="mb-3 position-relative">
+                            <label class="form-label">Şirket</label>
+                            <input type="text" class="w-50 position-absolute form-control" id="companyEditData" style="top:60%; right: 25%; height: 30px;">
+                        </div>
+                        <input type="hidden" id="companyEditId" />
+                        <button id="companyEditDivBtn" type="submit" class="btn btn-warning"><i class="fa-solid fa-square-plus"></i> Düzenle</button>
+                    </div>
+                </div>
+
+    </div>
+</div>
+
+<script type="text/javascript">
+    var no = 0;
+    var productTable = document.getElementById("productTable");
+
+    //Methodu çalıştırdı.
+    $(document).ready(function () {
+        getDatasForCompanies();
+    })
+
+
+    //Şirketleri Çekti.
+    function getDatasForCompanies() {
+        $.ajax({
+            contentType: "application/json; charset=utf-8",
+            url: "http://localhost:5047/api/Companies/getall",
+            type: "get",
+            crossDomain: true,
+            dataType: "json",
+            success: function (response) {
+                console.log(response);
+                getCompanies(response);
+
+            }
+        })
+    }
+
+    //Şirketleri Bastı.
+    function getCompanies(data) {
+        $.each(data, function (key, value) {
+            no = no + 1;
+            productTable.innerHTML += "<tr>" +
+                "<td>" + no + "</td>" +
+                "<td>" + value.companyName + "</td>" +
+                "<td><button type=\"button\" onclick=\"openEditDiv( " + value.id + ")\" class=\"btn btn-warning\" id= " + value.id + "> <i class=\"fa-solid fa-pen-to-square\"></i>Düzenle</button>" +
+                "<button type=\"button\" onclick=\"deleteFunction( " + value.id + ")\"  class=\"btn btn-danger\" id=" + value.id + "> <i class=\"fa-solid fa-trash-can\"> </i>Sil</button> </td>" +
+                "</tr>";
+        })
+    }
+
+    //Şirketi Çekti.
+    function getCompany(data) {
+        $.ajax({
+            contentType: "application/json; charset=utf-8",
+            url: "http://localhost:5047/api/Products/get?id=" + JSON.stringify(data),
+            type: "get",
+            crossDomain: true,
+            dataType: "json",
+            success: function (response) {
+                console.log(response);
+                $("#companyEditData").val(response.name);
+                $("#companyEditId").val(response.id);
+            }
+        })
+    }
+
+
+    $("#companyaddBtn").click(function () {
+        $("#companyAdd").css("display", "block");
+    })
+
+
+    function openEditDiv(data) {
+        getcompany(data);
+        $("#companyEdit").css("display", "block");
+    }
+
+
+</script>

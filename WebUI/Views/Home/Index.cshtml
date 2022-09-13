@@ -6,18 +6,20 @@
     <!-- Stack the columns on mobile by making one full-width and the other half-width -->
     <div class="row">
         <div class="col-md-6">
-            <label>Sipariş Tarihini Giriniz</label>
-            <input type="datetime-local" />
+            <form id="dateTimeForm" style="display:none;">
+                <label class="form-label">Sipariş Tarihini Giriniz</label>
+                <input type="datetime-local" class="form-control" id="dateTime"/>
+            </form>
         </div>
-        <div class="col-md-6">
-            For Company
-            <select name="Company" id="company">
+        <div class="col-md-6" id="companySelect">
+            <form id="companyForm" style="display:none;">
+            <label class="form-label">Şirket</label>
+            <select class="form-control" name="Company" id="company">
             </select>
+            </form>
         </div>
-        <div class="container text-center">
-            <div class="col-md-3 align-self-end">
-                <input type="button" class="btn btn-primary" id="addCompany" value="Ürün Seçimi" />
-            </div>
+        <div class="container text-center" id="addCompanyDiv" style="display:none;">
+                <button type="button" class="btn btn-primary" id="addCompany" >Ürün Seçimi</button>
         </div>
 
     </div>
@@ -39,7 +41,7 @@
                 <form>
                     <input type="hidden" id="productAmount" />
                     <label class="form-label">Adet</label>
-                    <input type="text" class="form-control" id="piece">
+                    <input type="text"  class="form-control" id="piece">
                 </form>
             </div>
         </div>
@@ -48,7 +50,7 @@
                 <form>
                     <fieldset disabled>
                         <label class="form-label">Tutar</label>
-                        <input type="text" class="form-control" id="amount">
+                        <input type="text"  class="form-control" id="amount">
                     </fieldset>
                 </form>
             </div>
@@ -91,7 +93,9 @@
             dataType: "json",
             success: function (response) {
                 console.log(response);
-                getCompanies(response)
+                getCompanies(response);
+                $("#companyForm").css("display","block");
+                $("#dateTimeForm").css("display","block");
 
             }
         })
@@ -99,6 +103,10 @@
 
     //Şirketleri Seçtik.
     function getCompanies(data) {
+        var optDefault=document.createElement("option");
+        optDefault.innerHTML="Bir Şirket Seçiniz.";
+        optDefault.setAttribute("id","default");
+        $("#company").append(optDefault);
         $.each(data, function (key, value) {
 
             var opt = document.createElement("option");
@@ -109,12 +117,42 @@
         )
     }
 
-    //Ürünler için
 
+    //Şirket Ekleme butonunu açar.
+    $("#company").change(function(){
+        var dateTime=$("#dateTime").val();
+        $("#default").remove();
+        if (dateTime == ""){
+        $("#addCompanyDiv").css("display", "none")
+        }
+        else{
+            $("#addCompanyDiv").css("display", "block")
+        }
+    }
+    )
+
+    $("#dateTime").change(function () {
+        var dateTime = $("#company").val();
+        if (dateTime == "" || dateTime== "Bir Şirket Seçiniz.") {
+        $("#addCompanyDiv").css("display", "none")
+        }
+        else {
+            $("#addCompanyDiv").css("display", "block")
+        }
+    }
+    )
+
+    
+
+    //Ürünler için
     $("#addCompany").click(function () {
         $('#productDiv').css("display", "block");
         getDatasForProduct();
-
+        var hidden=document.createElement("fieldset");
+        hidden.setAttribute("disabled","");
+        $("#companyForm").append(hidden);
+        hidden.appendChild(document.getElementById("company"));
+        $("#dateTime").attr("readonly","readonly")
     });
 
     
@@ -150,6 +188,7 @@
 
     //Tutarı yazdı.
     $("#piece").change(function(){
+        $("productDefault").remove();
         var piece = $(this).val();
         var amount=$("#productAmount").val();
         $("#amount").val(piece * amount);
@@ -157,6 +196,7 @@
 
     //Ürün idsini gönderdi.
     $("#product").change(function(){
+
         getDataForProduct($('option:selected', this).attr('id'));
         $("#piece").val("");
         $("#amount").val("");
@@ -166,6 +206,7 @@
     function getProducts(data) {
         var optDefault = document.createElement("option");
         optDefault.innerHTML="Ürün seçiniz...";
+        optDefault.setAttribute("id","productDefault")
         $("#product").append(optDefault);
         $.each(data, function (key, value) {
 
@@ -191,10 +232,11 @@
     var tur = 0;
     var totalAmount = 0;
     var order={
-        companyId:"",
-        totalAmount:""
+        companyId:0,
+        totalAmount:0,
+        date:""
     }
-    var orderProduct{
+    var orderProduct={
         productId:"",
         orderId:""
     }
@@ -229,53 +271,68 @@
         $("#totalAmount").css("display","inline");
         companyId = $('option:selected', "#company").attr('id');
         productId = $('option:selected', "#product").attr('id');
+        dateTime = $("#dateTime").val();
         order["totalAmount"] = totalAmount;
         order["companyId"] = companyId;
-        orderDetail[tur]=new Array( companyId,productId , totalAmount);
+        order["date"] = dateTime.substring(0,10);
+        orderDetail[tur]=new Array(productId);
         tur=tur+1;
     }
 
 
 
     $("#addOrder").click(function(){
-        addOrder(order);
-        
-        //for (i = 0; i < orderDetail.length; i++) {
-        //    addOrderProducts()
-        //}
+        addOrder(order);      
     })
 
-    function addOrder(data){
-        $.ajax({
-            contentType: "application/json; charset=utf-8",
-            url: "http://localhost:5047/api/Orders/add",
-            type: "post",
-            crossDomain: true,
-            data:JSON.stringify(data),
-            dataType: "json",
-            success: function (response) {
-                getOrder(response);
-            }
+    
 
-        });
-    } 
-    function addOrderProducts(data) {
+    function addOrder(datas){
         $.ajax({
             contentType: "application/json; charset=utf-8",
-            url: "http://localhost:5047/api/OrderProducts/add",
+            url: "http://localhost:5047/api/orders/add",
             type: "post",
+            data: JSON.stringify(datas),
             crossDomain: true,
-            data: JSON.stringify(data),
             dataType: "json",
             success: function (response) {
                 console.log(response);
+                getOrder(response);    
+                for (i = 0; i < orderDetail.length; i++) 
+                {
+                    orderProduct["productId"] = parseInt(orderDetail[i]);
+                    orderProduct["orderId"] = orderId;
+                    addOrderProducts(orderProduct);
+                }
+                function addOrderProducts(data) {
+                    $.ajax({
+                        contentType: "application/json; charset=utf-8",
+                        url: "http://localhost:5047/api/OrdersProducts/add",
+                        type: "post",
+                        data:JSON.stringify(data),
+                        crossDomain: true,
+                        dataType: "json",
+                        success: function (response) {
+                            console.log(response);
+                            alert("Eklendi.");
+                            window.location.reload();
+                        }
+
+                    });
+                }
             }
 
         });
     }
 
     function getOrder(data) {
-        orderId=data.id
+        orderId = data.id;
     }
+
+
+
+  
+
+    
 </script>
 
