@@ -18,7 +18,7 @@
                         <th scope="col">İşlem</th>
                     </tr>
                 </thead>
-                <tbody id="productTable">
+                <tbody id="companyTable">
                 </tbody>
             </table>
             <button type="button" id="companyaddBtn" class="btn btn-success"><i class="fa-solid fa-square-plus"></i> Ekle</button>
@@ -66,7 +66,7 @@
 
 <script type="text/javascript">
     var no = 0;
-    var productTable = document.getElementById("productTable");
+    var companyTable = document.getElementById("companyTable");
 
     //Methodu çalıştırdı.
     $(document).ready(function () {
@@ -94,7 +94,7 @@
     function getCompanies(data) {
         $.each(data, function (key, value) {
             no = no + 1;
-            productTable.innerHTML += "<tr>" +
+            companyTable.innerHTML += "<tr>" +
                 "<td>" + no + "</td>" +
                 "<td>" + value.companyName + "</td>" +
                 "<td><button type=\"button\" onclick=\"openEditDiv( " + value.id + ")\" class=\"btn btn-warning\" id= " + value.id + "> <i class=\"fa-solid fa-pen-to-square\"></i>Düzenle</button>" +
@@ -103,32 +103,95 @@
         })
     }
 
-    //Şirketi Çekti.
+    
+
+    //Eklme Divi
+    $("#companyaddBtn").click(function () {
+        $("#companyAdd").css("display", "block");
+    })
+
+    //Güncelleme Divi
+    function openEditDiv(data) {
+        getCompany(data);
+        $("#companyEdit").css("display", "block");
+    }
+
+//Şirketi Çekti.
     function getCompany(data) {
         $.ajax({
             contentType: "application/json; charset=utf-8",
-            url: "http://localhost:5047/api/Products/get?id=" + JSON.stringify(data),
+            url: "http://localhost:5047/api/Companies/get?id=" + JSON.stringify(data),
             type: "get",
             crossDomain: true,
             dataType: "json",
             success: function (response) {
                 console.log(response);
-                $("#companyEditData").val(response.name);
+                $("#companyEditData").val(response.companyName);
                 $("#companyEditId").val(response.id);
             }
         })
     }
 
-
-    $("#companyaddBtn").click(function () {
-        $("#companyAdd").css("display", "block");
-    })
-
-
-    function openEditDiv(data) {
-        getcompany(data);
-        $("#companyEdit").css("display", "block");
+    //Güncelleme
+    $("#companyEditDivBtn").click(function () {
+        var data = {
+            Id: $("#companyEditId").val(),
+            companyName: $("#companyEditData").val()
+        }
+        $.ajax({
+            contentType: "application/json; charset=utf-8",
+            url: "http://localhost:5047/api/Companies/update",
+            type: "post",
+            crossDomain: true,
+            data: JSON.stringify(data),
+            dataType: "json",
+            success: function (response) {
+                console.log(response);
+                $("#companyEdit").css("display", "none");
+                window.location.reload();
+            }
+        })
     }
+    )
 
+
+
+    //Ekleme
+    $("#companyAddDivBtn").click(function () {
+        var data = {
+            companyName: $("#companyAddData").val()
+        }
+        $.ajax({
+            contentType: "application/json; charset=utf-8",
+            url: "http://localhost:5047/api/Companies/add",
+            type: "post",
+            crossDomain: true,
+            data: JSON.stringify(data),
+            dataType: "json",
+            success: function (response) {
+                console.log(response);
+                $("#companyAdd").css("display", "none");
+                window.location.reload();
+            }
+        })
+    }
+    )
+
+
+    //Silme
+    function deleteFunction(data) {
+
+        $.ajax({
+            contentType: "application/json; charset=utf-8",
+            url: "http://localhost:5047/api/Companies/delete?id=" + JSON.stringify(data),
+            type: "get",
+            crossDomain: true,
+            dataType: "json",
+            success: function (response) {
+                console.log(response);
+                window.location.reload();
+            }
+        })
+    }
 
 </script>
