@@ -196,7 +196,7 @@
 
     //Ürün idsini gönderdi.
     $("#product").change(function(){
-
+        $("#productDefault").remove();
         getDataForProduct($('option:selected', this).attr('id'));
         $("#piece").val("");
         $("#amount").val("");
