@@ -2,7 +2,7 @@
 
 
 
-•	Sanalogi Case Hakkında
+•	Hakkında
 o	Kullanılan Teknolojiler
 o	Programlama Dilleri
 o	Kullanılan Kütüphaneler
